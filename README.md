@@ -66,7 +66,7 @@ python -m pip install pandas
 
 # 3. Place input CSVs in the project root
 # 4. Execute the pipeline
-python main.py
+python filter_brand_logo.py
 
 All intermediate and final CSVs will appear alongside your script.
 
@@ -172,4 +172,4 @@ Pull requests are welcome! Feel free to open issues for bugs or feature ideas.
 
 Author
 
-Your Name – Team Lead, Data Filtration
+Romin Yadav – Team Lead, Data Filtration
