@@ -1,175 +1,135 @@
-Brand Logo Filtering Pipeline
+# Brand Logo Filtering Pipeline
 
-Overview
+## 🧠 Overview
 
-This project processes Instagram creator data to identify business (brand) accounts that appear in the top_collaboration field of content‑creator profiles, then attaches direct links to each brand’s logo image. The result is a clean, analytics‑ready CSV you can feed into downstream dashboards or partner‑matching engines.
+This project processes Instagram creator data to identify **business (brand) accounts** that appear in the `top_collaboration` field of **content creator** profiles, and appends direct links to each brand’s logo image. The result: a clean, analytics-ready CSV for dashboards or partner-matching engines.
 
-Why this matters
+## 🎯 Why This Matters
 
-Influencer discovery often clutters a brand’s shortlist with other creators or accounts that lack a clear brand identity. By filtering purely for business accounts backed by verified logo‑style avatars, you get a high‑confidence list of real brands that have already collaborated with your creators.
+Influencer discovery often clutters a brand’s shortlist with other creators or accounts lacking clear brand identity. By filtering purely for **business accounts** backed by verified **logo-style avatars**, you get a **high-confidence list of real brands** that have collaborated with your creators.
 
-File Glossary
+---
 
-File
+## 📁 File Glossary
 
-Purpose
+| File                                      | Purpose                                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `input_main.csv`                          | Master dataset of Instagram profiles. Must contain at least `username`, `creator_type`, and `top_collaboration` columns.       |
+| `imageclassification.csv`                 | Maps profile image filenames (`<username>.jpg`) to a `classification` of either `logo` or `pic`.                              |
+| `main.py`                                 | Pipeline script implementing the logic described below.                                                                        |
+| `creatorWithNonBlankTopCollaboration.csv` | **Intermediate** — content creators with non-empty `top_collaboration`.                                                        |
+| `missing.csv`                             | **Intermediate** — usernames in `top_collaboration` not found in `input_main.csv`.                                             |
+| `creator_with_brand_logo.csv`             | **Final output** — creators paired with filtered, logo-verified brand collaborators and their logo URLs.                       |
 
-input_main.csv
+---
 
-Master dataset of Instagram profiles. Must contain at least username, creator_type, and top_collaboration columns.
+## 🔄 Pipeline at a Glance
 
-imageclassification.csv
+1. **Filter content creators**  
+   Keep rows where `creator_type == "Content Creator"` and `top_collaboration` is not blank.
 
-Map of profile‑image filenames (<username>.jpg) to a single column, classification, whose value is either logo or pic.
+2. **Validate & clean collaborators**  
+   - Split `top_collaboration` on `|`  
+   - Drop unknown usernames (log to `missing.csv`)  
+   - Keep only usernames with `creator_type == "Business"`
 
-main.py
+3. **Logo check**  
+   - Cross-reference with `imageclassification.csv`  
+   - Remove collaborators classified as `pic`
 
-Pipeline script implementing the logic described below.
+4. **Generate logo URLs**  
+   Add a new column `top_collaboration_brand_logo` like:
+   ```
+   angarajewelry;https://insta.rominyadav.com.np/angarajewelry.jpg | cariloha;https://insta.rominyadav.com.np/cariloha.jpg
+   ```
 
-creatorWithNonBlankTopCollaboration.csv
+5. **Export**  
+   Save final data to `creator_with_brand_logo.csv`
 
-Intermediate – content creators whose top_collaboration field is non‑empty.
+---
 
-missing.csv
+## 🚀 Quick Start
 
-Intermediate – usernames referenced in top_collaboration that do not exist in input_main.csv.
-
-creator_with_brand_logo.csv
-
-Final output – creators paired with a filtered, logo‑verified list of brand collaborators plus ready‑to‑use logo URLs.
-
-Pipeline at a Glance
-
-Select creators of interest – keep rows where creator_type == "Content Creator" and top_collaboration isn’t blank.
-
-Keep only known business collaborators
-
-Split top_collaboration on |.
-
-Remove usernames absent from input_main.csv (logged to missing.csv).
-
-Drop collaborators whose own creator_type equals Content Creator; keep those flagged Business.
-
-Enforce logo avatars – cross‑reference each remaining collaborator with imageclassification.csv. Remove usernames classified as pic.
-
-Generate branded logo URLs – produce top_collaboration_brand_logo where each entry looks like:
-
-angarajewelry;https://insta.rominyadav.com.np/angarajewelry.jpg | cariloha;https://insta.rominyadav.com.np/cariloha.jpg
-
-Save results – write cleaned creators and their verified brand‑logo partners to creator_with_brand_logo.csv.
-
-Quick‑start
-
+```bash
 # 1. Clone or copy the repo
 # 2. Install dependencies
 python -m pip install pandas
 
-# 3. Place input CSVs in the project root
-# 4. Execute the pipeline
-python filter_brand_logo.py
+# 3. Place your CSVs in the project root
+# 4. Run the script
+python main.py
+```
 
-All intermediate and final CSVs will appear alongside your script.
+Output files (`*.csv`) will be saved in the same directory.
 
-CSV Schema Details
+---
 
-input_main.csv (required columns)
+## 📊 CSV Schema Details
 
-Column
+### `input_main.csv`
 
-Example
+| Column            | Example          | Notes                                                        |
+| ----------------- | ---------------- | ------------------------------------------------------------ |
+| `username`        | `my_influencer`  | Lowercase, no leading `@`                                    |
+| `creator_type`    | `Content Creator` / `Business` | Case-sensitive exact match                                   |
+| `top_collaboration` | `brand_1 | brand_2 | brand_3` | Pipe (`|`) separated usernames                         |
 
-Notes
+### `imageclassification.csv`
 
-username
+| Column            | Example         |
+| ----------------- | --------------- |
+| `filename`        | `brand_1.jpg`   |
+| `classification`  | `logo` / `pic`  |
 
-my_influencer
+---
 
-Lower‑case, no leading @
+## ✅ Output Example
 
-creator_type
+Final `creator_with_brand_logo.csv` includes:
 
-Content Creator / Business
+| top_collaboration        | top_collaboration_brand_logo                                                                                  |
+|--------------------------|----------------------------------------------------------------------------------------------------------------|
+| `brand_1 | brand_2`       | `brand_1;https://insta.rominyadav.com.np/brand_1.jpg | brand_2;https://insta.rominyadav.com.np/brand_2.jpg` |
 
-Case‑sensitive match to the two strings the script expects
+> 💡 **Note:** Each username is paired with its logo URL using a `;`. You can split by `;` and `|` for downstream processing.
 
-top_collaboration
+---
 
-`brand_1
+## ⚙️ Customization
 
-brand_2
+- 🔗 **Change logo host URL**  
+  Modify `generate_logo_urls()` to point to a different image server.
 
-brand_3`
+- 🧠 **Redefine business logic**  
+  Adjust how `username_type_map` classifies Business vs Creator.
 
-Pipe‑separated usernames
+- 🛠 **Add filters**  
+  Extend `process_collaborations()` or `filter_by_logo()` with new rules as needed.
 
-imageclassification.csv
+---
 
-Column
+## 🧯 Troubleshooting
 
-Example
+| Issue                                | Likely Cause                                    | Solution                                                                                         |
+|-------------------------------------|-------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `creator_with_brand_logo.csv` is empty | All collaborators were creators or lacked logos | Check if `imageclassification.csv` is updated and creators actually collaborate with brands     |
+| Many usernames in `missing.csv`     | `top_collaboration` includes unknown usernames  | Update your `input_main.csv` or audit `top_collaboration` values for accuracy                   |
 
-filename
+---
 
-brand_1.jpg
+## 📄 License
 
-classification
+MIT © 2025 **Your Name** — Free for commercial and private use.
 
-logo / pic
+---
 
-Output Example
+## 🤝 Contributing
 
-After running, creator_with_brand_logo.csv includes all original columns plus:
+Pull requests welcome! Feel free to open issues for bugs or suggestions.
 
-top_collaboration
+---
 
-top_collaboration_brand_logo
+## 👤 Author
 
-`brand_1
-
-brand_2`
-
-`brand_1;https://insta.rominyadav.com.np/brand_1.jpg
-
-brand_2;https://insta.rominyadav.com.np/brand_2.jpg`
-
-Tip: The semicolon (;) separates the username from its logo URL; adjust downstream parsers accordingly.
-
-Customisation
-
-Logo host URL – swap the base URL inside generate_logo_urls() if your logos live elsewhere.
-
-Business definition – update the username_type_map lookup if you track brands via another flag.
-
-Additional filters – insert extra conditions in the process_collaborations() or filter_by_logo() helpers.
-
-Troubleshooting
-
-Symptom
-
-Likely Cause
-
-Fix
-
-creator_with_brand_logo.csv is empty
-
-All collaborators were creators or lacked logos
-
-Verify that imageclassification.csv is up‑to‑date and that your creators do indeed collaborate with brands
-
-Missing usernames overflow
-
-Many refs absent from input_main.csv
-
-Update your master dataset or run audits on top_collaboration integrity
-
-License
-
-MIT © 2025 Your Name – free for commercial and private use.
-
-Contributing
-
-Pull requests are welcome! Feel free to open issues for bugs or feature ideas.
-
-Author
-
-Romin Yadav – Team Lead, Data Filtration
+**Romin Yadav**  
+Team Lead, Data Filtration
