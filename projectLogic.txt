@@ -1,0 +1,16 @@
+I have 2 files here @input_main.csv and @imageclassification.csv 
+[Goal: we need list of "creator_type" = "Content Creator" with non-empty "top_collaboration" who are only brands. where this "top_collaboration" column contains username of brands and creators ]
+
+Logic/Steps:
+1. we will filter out all the "creator_type"="Content Creator" and non blank "top_collaboration" from input_main.csv in creatorWithNonBlankTopCollaboration.csv
+now we have list of only "Content Creator" and non empty "top_collaboration"
+
+2. From creatorWithNonBlankTopCollaboration.csv, we have "top_collaboration" that contains data in this manner : "angarajewelry | cariloha | boston_harlow3 | sophiemayboutique | loloirugs"
+
+there all are usernames seperated by |. now we will check these username to "username" from input_main.csv if it doesn't exist then we will remove and keep in missing.csv. and if username do exist then we will check again in input_main.csv that if that username is 'Content Creator' or 'Business'. Drop all the 'Content Creator' from 'top_collaboration' colomn and only keep 'Business'
+
+and make sure there is no empty top_collaboration in the list.
+3. then compare all the username in "top_collaboration" with imageclassification.csv. it has all the classification of these usernames if they are pic or logo. so if that username has 'classification' value to 'logo' then keep it there and if it 'pic' then drop it. after this done make sure we have non-empty "top_collaboration"
+4. then add new column in last "top_collaboration_brand_logo"
+
+let's say we got "angarajewelry | cariloha" in "top_collaboration" after all these processing then result should be "angarajewelry;https://insta.rominyadav.com.np/angarajewelry.jpg | cariloha;;https://insta.rominyadav.com.np/cariloha.jpg" in creator_with_brand_logo.csv
