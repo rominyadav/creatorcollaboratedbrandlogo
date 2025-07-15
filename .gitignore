@@ -1,2 +1,7 @@
 venv
 .venv
+brand_with_no_creator.csv
+creator_with_no_brand.csv
+brand_with_creator_pic.csv
+creator_with_brand_logo.csv
+sanitized/
